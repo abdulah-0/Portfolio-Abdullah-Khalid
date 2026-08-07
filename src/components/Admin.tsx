@@ -5,8 +5,9 @@ import {
   createProject,
   updateProject,
   deleteProject,
+  uploadProjectImage,
 } from "../lib/supabase";
-import { MdAdd, MdClose, MdDelete, MdEdit, MdLock, MdLogout } from "react-icons/md";
+import { MdAdd, MdClose, MdDelete, MdEdit, MdLock, MdLogout, MdUpload } from "react-icons/md";
 import "./styles/Admin.css";
 
 interface AdminProps {
@@ -20,6 +21,7 @@ const Admin: React.FC<AdminProps> = ({ onClose, onProjectsUpdated }) => {
   const [authError, setAuthError] = useState<string>("");
   const [projects, setProjects] = useState<Project[]>([]);
   const [loading, setLoading] = useState<boolean>(false);
+  const [isUploadingImage, setIsUploadingImage] = useState<boolean>(false);
 
   // Modal / Form state for Add/Edit
   const [isFormOpen, setIsFormOpen] = useState<boolean>(false);
@@ -53,7 +55,6 @@ const Admin: React.FC<AdminProps> = ({ onClose, onProjectsUpdated }) => {
 
   const handleLogin = (e: React.FormEvent) => {
     e.preventDefault();
-    // Default admin passcode: admin123 or user customized code
     if (passcode === "admin123" || passcode === "abdullah2026") {
       setIsAuthenticated(true);
       sessionStorage.setItem("abdullah_admin_auth", "true");
@@ -95,6 +96,23 @@ const Admin: React.FC<AdminProps> = ({ onClose, onProjectsUpdated }) => {
       github_link: p.github_link || "",
     });
     setIsFormOpen(true);
+  };
+
+  const handleImageFileChange = async (
+    e: React.ChangeEvent<HTMLInputElement>
+  ) => {
+    if (e.target.files && e.target.files[0]) {
+      const file = e.target.files[0];
+      setIsUploadingImage(true);
+      try {
+        const imageUrl = await uploadProjectImage(file);
+        setFormData((prev) => ({ ...prev, image: imageUrl }));
+      } catch (err) {
+        console.error("Upload error:", err);
+      } finally {
+        setIsUploadingImage(false);
+      }
+    }
   };
 
   const handleSubmitForm = async (e: React.FormEvent) => {
@@ -165,16 +183,10 @@ const Admin: React.FC<AdminProps> = ({ onClose, onProjectsUpdated }) => {
       <div className="admin-header">
         <h1>Admin Control Panel</h1>
         <div className="admin-header-actions">
-          <button
-            className="admin-btn admin-btn-primary"
-            onClick={openAddForm}
-          >
+          <button className="admin-btn admin-btn-primary" onClick={openAddForm}>
             <MdAdd /> Add Project
           </button>
-          <button
-            className="admin-btn admin-btn-secondary"
-            onClick={handleLogout}
-          >
+          <button className="admin-btn admin-btn-secondary" onClick={handleLogout}>
             <MdLogout /> Logout
           </button>
           <button className="admin-btn admin-btn-secondary" onClick={onClose}>
@@ -275,16 +287,49 @@ const Admin: React.FC<AdminProps> = ({ onClose, onProjectsUpdated }) => {
                 />
               </div>
               <div className="admin-form-group">
-                <label>Cover Image URL</label>
-                <input
-                  type="text"
-                  className="admin-form-input"
-                  placeholder="/images/placeholder.webp or https://..."
-                  value={formData.image}
-                  onChange={(e) =>
-                    setFormData({ ...formData, image: e.target.value })
-                  }
-                />
+                <label>Upload Project Cover Picture</label>
+                <div style={{ display: "flex", gap: "10px", alignItems: "center" }}>
+                  <input
+                    type="file"
+                    accept="image/*"
+                    onChange={handleImageFileChange}
+                    className="admin-form-input"
+                    style={{ padding: "8px" }}
+                  />
+                </div>
+                {isUploadingImage && (
+                  <p style={{ fontSize: "12px", color: "#e31b6d", marginTop: "4px" }}>
+                    <MdUpload /> Uploading image to Supabase Storage...
+                  </p>
+                )}
+                <div style={{ marginTop: "10px" }}>
+                  <label style={{ fontSize: "12px", color: "#888" }}>
+                    Or Image URL:
+                  </label>
+                  <input
+                    type="text"
+                    className="admin-form-input"
+                    placeholder="/images/placeholder.webp or https://..."
+                    value={formData.image}
+                    onChange={(e) =>
+                      setFormData({ ...formData, image: e.target.value })
+                    }
+                  />
+                </div>
+                {formData.image && (
+                  <div style={{ marginTop: "10px" }}>
+                    <img
+                      src={formData.image}
+                      alt="Preview"
+                      style={{
+                        height: "80px",
+                        borderRadius: "6px",
+                        objectFit: "cover",
+                        border: "1px solid rgba(255, 255, 255, 0.2)",
+                      }}
+                    />
+                  </div>
+                )}
               </div>
               <div className="admin-form-group">
                 <label>Live Preview Link (Optional)</label>

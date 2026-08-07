@@ -161,3 +161,41 @@ export async function deleteProject(id: string): Promise<boolean> {
   saveLocalProjects(projects);
   return true;
 }
+
+export async function uploadProjectImage(file: File): Promise<string> {
+  if (supabase) {
+    try {
+      const fileExt = file.name.split(".").pop();
+      const fileName = `${Date.now()}_${Math.random().toString(36).substring(2, 7)}.${fileExt}`;
+      const filePath = `project-covers/${fileName}`;
+
+      const { data, error } = await supabase.storage
+        .from("projects")
+        .upload(filePath, file, {
+          cacheControl: "3600",
+          upsert: true,
+        });
+
+      if (!error && data) {
+        const { data: publicUrlData } = supabase.storage
+          .from("projects")
+          .getPublicUrl(filePath);
+
+        if (publicUrlData?.publicUrl) {
+          return publicUrlData.publicUrl;
+        }
+      } else if (error) {
+        console.warn("Supabase storage bucket upload warning:", error.message);
+      }
+    } catch (e) {
+      console.error("Supabase storage error:", e);
+    }
+  }
+
+  // Fallback: Convert file to Base64 data URL
+  return new Promise((resolve) => {
+    const reader = new FileReader();
+    reader.onloadend = () => resolve(reader.result as string);
+    reader.readAsDataURL(file);
+  });
+}

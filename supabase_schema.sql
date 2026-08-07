@@ -69,3 +69,9 @@ VALUES
   'https://github.com/abdulah-0',
   'https://github.com/abdulah-0'
 );
+
+-- 6. Supabase Storage Setup Instructions for Project Cover Pictures:
+-- Go to Supabase Dashboard -> Storage -> Create new bucket:
+-- Bucket Name: "projects"
+-- Set Bucket Privacy: Public
+-- Under Bucket Policies, allow Public Select and Public Insert.

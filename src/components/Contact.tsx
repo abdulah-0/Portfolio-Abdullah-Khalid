@@ -57,7 +57,7 @@ const Contact = () => {
               WhatsApp <MdArrowOutward />
             </a>
             <a
-              href="https://www.instagram.com"
+              href="https://www.instagram.com/abdulahkhalid__?igsh=bWF6eGcwN2plNjVy"
               target="_blank"
               rel="noreferrer"
               data-cursor="disable"
