@@ -44,6 +44,13 @@
   font-weight: 700;
   font-size: 14px;
   letter-spacing: 0.2px;
+  display: flex;
+  align-items: center;
+}
+.navbar-logo {
+  height: 38px;
+  width: auto;
+  object-fit: contain;
 }
 @media only screen and (min-width: 500px) {
   .header {
