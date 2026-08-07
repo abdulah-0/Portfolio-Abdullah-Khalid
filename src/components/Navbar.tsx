@@ -9,7 +9,11 @@ import logoImg from "../assets/logo.png";
 gsap.registerPlugin(ScrollSmoother, ScrollTrigger);
 export let smoother: ScrollSmoother;
 
-const Navbar = () => {
+interface NavbarProps {
+  onOpenAdmin?: () => void;
+}
+
+const Navbar: React.FC<NavbarProps> = ({ onOpenAdmin }) => {
   useEffect(() => {
     smoother = ScrollSmoother.create({
       wrapper: "#smooth-wrapper",
@@ -28,11 +32,10 @@ const Navbar = () => {
     links.forEach((elem) => {
       let element = elem as HTMLAnchorElement;
       element.addEventListener("click", (e) => {
-        if (window.innerWidth > 1024) {
+        const href = element.getAttribute("data-href");
+        if (href && href.startsWith("#") && window.innerWidth > 1024) {
           e.preventDefault();
-          let elem = e.currentTarget as HTMLAnchorElement;
-          let section = elem.getAttribute("data-href");
-          smoother.scrollTo(section, true, "top top");
+          smoother.scrollTo(href, true, "top top");
         }
       });
     });
@@ -40,11 +43,12 @@ const Navbar = () => {
       ScrollSmoother.refresh(true);
     });
   }, []);
+
   return (
     <>
       <div className="header">
         <a href="/#" className="navbar-title" data-cursor="disable">
-          <img src={logoImg} alt="Logo" className="navbar-logo" />
+          <img src={logoImg} alt="Abdullah Khalid Logo" className="navbar-logo" />
         </a>
         <a
           href="mailto:abdullahkhalid.00019@gmail.com"
@@ -69,6 +73,19 @@ const Navbar = () => {
               <HoverLinks text="CONTACT" />
             </a>
           </li>
+          {onOpenAdmin && (
+            <li>
+              <a
+                href="#admin"
+                onClick={(e) => {
+                  e.preventDefault();
+                  onOpenAdmin();
+                }}
+              >
+                <HoverLinks text="ADMIN" />
+              </a>
+            </li>
+          )}
         </ul>
       </div>
 

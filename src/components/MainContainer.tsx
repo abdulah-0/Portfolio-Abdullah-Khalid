@@ -9,6 +9,9 @@ import SocialIcons from "./SocialIcons";
 import WhatIDo from "./WhatIDo";
 import Work from "./Work";
 import setSplitText from "./utils/splitText";
+import ProjectDetailModal from "./ProjectDetailModal";
+import Admin from "./Admin";
+import { fetchProjects, Project } from "../lib/supabase";
 
 const TechStack = lazy(() => import("./TechStack"));
 
@@ -16,6 +19,26 @@ const MainContainer = ({ children }: PropsWithChildren) => {
   const [isDesktopView, setIsDesktopView] = useState<boolean>(
     window.innerWidth > 1024
   );
+  const [projects, setProjects] = useState<Project[]>([]);
+  const [selectedProject, setSelectedProject] = useState<Project | null>(null);
+  const [isAdminOpen, setIsAdminOpen] = useState<boolean>(false);
+
+  const loadProjectsData = async () => {
+    const data = await fetchProjects();
+    setProjects(data);
+  };
+
+  useEffect(() => {
+    loadProjectsData();
+
+    // Check if URL contains #admin or ?admin=true
+    if (
+      window.location.hash === "#admin" ||
+      window.location.search.includes("admin=true")
+    ) {
+      setIsAdminOpen(true);
+    }
+  }, []);
 
   useEffect(() => {
     const resizeHandler = () => {
@@ -32,7 +55,7 @@ const MainContainer = ({ children }: PropsWithChildren) => {
   return (
     <div className="container-main">
       <Cursor />
-      <Navbar />
+      <Navbar onOpenAdmin={() => setIsAdminOpen(true)} />
       <SocialIcons />
       {isDesktopView && children}
       <div id="smooth-wrapper">
@@ -42,7 +65,10 @@ const MainContainer = ({ children }: PropsWithChildren) => {
             <About />
             <WhatIDo />
             <Career />
-            <Work />
+            <Work
+              projects={projects}
+              onSelectProject={(project) => setSelectedProject(project)}
+            />
             {isDesktopView && (
               <Suspense fallback={<div>Loading....</div>}>
                 <TechStack />
@@ -52,6 +78,20 @@ const MainContainer = ({ children }: PropsWithChildren) => {
           </div>
         </div>
       </div>
+
+      {/* Project Details Modal */}
+      <ProjectDetailModal
+        project={selectedProject}
+        onClose={() => setSelectedProject(null)}
+      />
+
+      {/* Admin Panel Overlay */}
+      {isAdminOpen && (
+        <Admin
+          onClose={() => setIsAdminOpen(false)}
+          onProjectsUpdated={loadProjectsData}
+        />
+      )}
     </div>
   );
 };

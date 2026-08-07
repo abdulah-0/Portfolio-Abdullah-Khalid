@@ -20,6 +20,12 @@ const Contact = () => {
                 +92 334 9211642
               </a>
             </p>
+            <h4>WhatsApp</h4>
+            <p>
+              <a href="https://wa.me/923349211642" target="_blank" rel="noreferrer" data-cursor="disable">
+                +92 334 9211642
+              </a>
+            </p>
           </div>
           <div className="contact-box">
             <h4>Social</h4>
@@ -40,6 +46,15 @@ const Contact = () => {
               className="contact-social"
             >
               Linkedin <MdArrowOutward />
+            </a>
+            <a
+              href="https://wa.me/923349211642"
+              target="_blank"
+              rel="noreferrer"
+              data-cursor="disable"
+              className="contact-social"
+            >
+              WhatsApp <MdArrowOutward />
             </a>
             <a
               href="https://www.instagram.com"
