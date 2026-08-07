@@ -55,7 +55,7 @@ const MainContainer = ({ children }: PropsWithChildren) => {
   return (
     <div className="container-main">
       <Cursor />
-      <Navbar onOpenAdmin={() => setIsAdminOpen(true)} />
+      <Navbar />
       <SocialIcons />
       {isDesktopView && children}
       <div id="smooth-wrapper">

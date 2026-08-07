@@ -9,11 +9,7 @@ import logoImg from "../assets/logo.png";
 gsap.registerPlugin(ScrollSmoother, ScrollTrigger);
 export let smoother: ScrollSmoother;
 
-interface NavbarProps {
-  onOpenAdmin?: () => void;
-}
-
-const Navbar: React.FC<NavbarProps> = ({ onOpenAdmin }) => {
+const Navbar = () => {
   useEffect(() => {
     smoother = ScrollSmoother.create({
       wrapper: "#smooth-wrapper",
@@ -50,13 +46,6 @@ const Navbar: React.FC<NavbarProps> = ({ onOpenAdmin }) => {
         <a href="/#" className="navbar-title" data-cursor="disable">
           <img src={logoImg} alt="Abdullah Khalid Logo" className="navbar-logo" />
         </a>
-        <a
-          href="mailto:abdullahkhalid.00019@gmail.com"
-          className="navbar-connect"
-          data-cursor="disable"
-        >
-          abdullahkhalid.00019@gmail.com
-        </a>
         <ul>
           <li>
             <a data-href="#about" href="#about">
@@ -73,19 +62,6 @@ const Navbar: React.FC<NavbarProps> = ({ onOpenAdmin }) => {
               <HoverLinks text="CONTACT" />
             </a>
           </li>
-          {onOpenAdmin && (
-            <li>
-              <a
-                href="#admin"
-                onClick={(e) => {
-                  e.preventDefault();
-                  onOpenAdmin();
-                }}
-              >
-                <HoverLinks text="ADMIN" />
-              </a>
-            </li>
-          )}
         </ul>
       </div>
 
