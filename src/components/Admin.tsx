@@ -6,8 +6,23 @@ import {
   updateProject,
   deleteProject,
   uploadProjectImage,
+  ResumeData,
+  fetchResumeData,
+  saveResumeData,
+  uploadResumePdf,
+  DEFAULT_RESUME,
 } from "../lib/supabase";
-import { MdAdd, MdClose, MdDelete, MdEdit, MdLock, MdLogout, MdUpload } from "react-icons/md";
+import {
+  MdAdd,
+  MdClose,
+  MdDelete,
+  MdEdit,
+  MdLock,
+  MdLogout,
+  MdUpload,
+  MdDescription,
+  MdWork,
+} from "react-icons/md";
 import "./styles/Admin.css";
 
 interface AdminProps {
@@ -19,14 +34,14 @@ const Admin: React.FC<AdminProps> = ({ onClose, onProjectsUpdated }) => {
   const [isAuthenticated, setIsAuthenticated] = useState<boolean>(false);
   const [passcode, setPasscode] = useState<string>("");
   const [authError, setAuthError] = useState<string>("");
+  const [activeTab, setActiveTab] = useState<"projects" | "resume">("projects");
+
+  // Projects State
   const [projects, setProjects] = useState<Project[]>([]);
   const [loading, setLoading] = useState<boolean>(false);
   const [isUploadingImage, setIsUploadingImage] = useState<boolean>(false);
-
-  // Modal / Form state for Add/Edit
   const [isFormOpen, setIsFormOpen] = useState<boolean>(false);
   const [editingProject, setEditingProject] = useState<Project | null>(null);
-
   const [formData, setFormData] = useState({
     title: "",
     category: "",
@@ -37,12 +52,17 @@ const Admin: React.FC<AdminProps> = ({ onClose, onProjectsUpdated }) => {
     github_link: "",
   });
 
+  // Resume State
+  const [resumeData, setResumeData] = useState<ResumeData>(DEFAULT_RESUME);
+  const [isUploadingPdf, setIsUploadingPdf] = useState<boolean>(false);
+  const [resumeSaveMsg, setResumeSaveMsg] = useState<string>("");
+
   useEffect(() => {
-    // Check if session stored
     const savedAuth = sessionStorage.getItem("abdullah_admin_auth");
     if (savedAuth === "true") {
       setIsAuthenticated(true);
       loadProjects();
+      loadResume();
     }
   }, []);
 
@@ -53,6 +73,11 @@ const Admin: React.FC<AdminProps> = ({ onClose, onProjectsUpdated }) => {
     setLoading(false);
   };
 
+  const loadResume = async () => {
+    const data = await fetchResumeData();
+    setResumeData(data);
+  };
+
   const handleLogin = (e: React.FormEvent) => {
     e.preventDefault();
     if (passcode === "admin123" || passcode === "abdullah2026") {
@@ -60,6 +85,7 @@ const Admin: React.FC<AdminProps> = ({ onClose, onProjectsUpdated }) => {
       sessionStorage.setItem("abdullah_admin_auth", "true");
       setAuthError("");
       loadProjects();
+      loadResume();
     } else {
       setAuthError("Invalid admin passcode. Please try again.");
     }
@@ -70,6 +96,7 @@ const Admin: React.FC<AdminProps> = ({ onClose, onProjectsUpdated }) => {
     sessionStorage.removeItem("abdullah_admin_auth");
   };
 
+  // Project Handlers
   const openAddForm = () => {
     setEditingProject(null);
     setFormData({
@@ -138,6 +165,32 @@ const Admin: React.FC<AdminProps> = ({ onClose, onProjectsUpdated }) => {
     }
   };
 
+  // Resume Handlers
+  const handlePdfUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files && e.target.files[0]) {
+      const file = e.target.files[0];
+      setIsUploadingPdf(true);
+      try {
+        const url = await uploadResumePdf(file);
+        setResumeData((prev) => ({ ...prev, pdfUrl: url }));
+        setResumeSaveMsg("PDF uploaded successfully!");
+      } catch (err) {
+        console.error("PDF upload error:", err);
+      } finally {
+        setIsUploadingPdf(false);
+      }
+    }
+  };
+
+  const handleSaveResume = async (e: React.FormEvent) => {
+    e.preventDefault();
+    const success = await saveResumeData(resumeData);
+    if (success) {
+      setResumeSaveMsg("Resume updated successfully!");
+      setTimeout(() => setResumeSaveMsg(""), 3000);
+    }
+  };
+
   if (!isAuthenticated) {
     return (
       <div className="admin-overlay">
@@ -151,7 +204,7 @@ const Admin: React.FC<AdminProps> = ({ onClose, onProjectsUpdated }) => {
         </div>
         <div className="admin-login-container">
           <h2>Admin Login</h2>
-          <p>Please enter your admin passcode to manage projects</p>
+          <p>Please enter your admin passcode to manage projects and resume</p>
           <form onSubmit={handleLogin}>
             <div className="admin-form-group">
               <label>Admin Passcode</label>
@@ -183,8 +236,21 @@ const Admin: React.FC<AdminProps> = ({ onClose, onProjectsUpdated }) => {
       <div className="admin-header">
         <h1>Admin Control Panel</h1>
         <div className="admin-header-actions">
-          <button className="admin-btn admin-btn-primary" onClick={openAddForm}>
-            <MdAdd /> Add Project
+          <button
+            className={`admin-btn ${
+              activeTab === "projects" ? "admin-btn-primary" : "admin-btn-secondary"
+            }`}
+            onClick={() => setActiveTab("projects")}
+          >
+            <MdWork /> Projects
+          </button>
+          <button
+            className={`admin-btn ${
+              activeTab === "resume" ? "admin-btn-primary" : "admin-btn-secondary"
+            }`}
+            onClick={() => setActiveTab("resume")}
+          >
+            <MdDescription /> Resume & PDF
           </button>
           <button className="admin-btn admin-btn-secondary" onClick={handleLogout}>
             <MdLogout /> Logout
@@ -196,45 +262,191 @@ const Admin: React.FC<AdminProps> = ({ onClose, onProjectsUpdated }) => {
       </div>
 
       <div className="admin-content">
-        <h2>Manage Work Projects</h2>
-        {loading ? (
-          <p style={{ marginTop: 20 }}>Loading projects...</p>
-        ) : (
-          <div className="admin-projects-grid">
-            {projects.map((project) => (
-              <div className="admin-project-card" key={project.id}>
-                {project.image && (
-                  <img
-                    src={project.image}
-                    alt={project.title}
-                    className="admin-project-img"
-                  />
-                )}
-                <div className="admin-project-body">
-                  <span className="admin-project-category">
-                    {project.category}
-                  </span>
-                  <h3 className="admin-project-title">{project.title}</h3>
-                  <p className="admin-project-tools">
-                    <strong>Tools:</strong> {project.tools}
-                  </p>
-                  <div className="admin-project-actions">
-                    <button
-                      className="admin-btn admin-btn-secondary"
-                      onClick={() => openEditForm(project)}
-                    >
-                      <MdEdit /> Edit
-                    </button>
-                    <button
-                      className="admin-btn admin-btn-danger"
-                      onClick={() => handleDelete(project.id)}
-                    >
-                      <MdDelete /> Delete
-                    </button>
+        {activeTab === "projects" ? (
+          <div>
+            <div
+              style={{
+                display: "flex",
+                justifyContent: "space-between",
+                alignItems: "center",
+              }}
+            >
+              <h2>Manage Work Projects</h2>
+              <button
+                className="admin-btn admin-btn-primary"
+                onClick={openAddForm}
+              >
+                <MdAdd /> Add Project
+              </button>
+            </div>
+            {loading ? (
+              <p style={{ marginTop: 20 }}>Loading projects...</p>
+            ) : (
+              <div className="admin-projects-grid">
+                {projects.map((project) => (
+                  <div className="admin-project-card" key={project.id}>
+                    {project.image && (
+                      <img
+                        src={project.image}
+                        alt={project.title}
+                        className="admin-project-img"
+                      />
+                    )}
+                    <div className="admin-project-body">
+                      <span className="admin-project-category">
+                        {project.category}
+                      </span>
+                      <h3 className="admin-project-title">{project.title}</h3>
+                      <p className="admin-project-tools">
+                        <strong>Tools:</strong> {project.tools}
+                      </p>
+                      <div className="admin-project-actions">
+                        <button
+                          className="admin-btn admin-btn-secondary"
+                          onClick={() => openEditForm(project)}
+                        >
+                          <MdEdit /> Edit
+                        </button>
+                        <button
+                          className="admin-btn admin-btn-danger"
+                          onClick={() => handleDelete(project.id)}
+                        >
+                          <MdDelete /> Delete
+                        </button>
+                      </div>
+                    </div>
                   </div>
-                </div>
+                ))}
               </div>
-            ))}
+            )}
+          </div>
+        ) : (
+          <div style={{ maxWidth: 800, margin: "0 auto" }}>
+            <h2>Manage Resume & PDF Download</h2>
+            <form onSubmit={handleSaveResume} style={{ marginTop: 20 }}>
+              <div className="admin-form-group">
+                <label>Upload PDF Resume File</label>
+                <input
+                  type="file"
+                  accept=".pdf,application/pdf"
+                  onChange={handlePdfUpload}
+                  className="admin-form-input"
+                />
+                {isUploadingPdf && (
+                  <p style={{ color: "#e31b6d", fontSize: 13, marginTop: 4 }}>
+                    <MdUpload /> Uploading PDF to Supabase Storage...
+                  </p>
+                )}
+                {resumeData.pdfUrl && (
+                  <p style={{ color: "#28a745", fontSize: 13, marginTop: 6 }}>
+                    Current PDF URL:{" "}
+                    <a
+                      href={resumeData.pdfUrl}
+                      target="_blank"
+                      rel="noreferrer"
+                      style={{ color: "#fff", textDecoration: "underline" }}
+                    >
+                      View Current Resume PDF
+                    </a>
+                  </p>
+                )}
+              </div>
+
+              <div className="admin-form-group">
+                <label>Direct PDF Download URL (Alternative)</label>
+                <input
+                  type="text"
+                  className="admin-form-input"
+                  placeholder="https://..."
+                  value={resumeData.pdfUrl}
+                  onChange={(e) =>
+                    setResumeData({ ...resumeData, pdfUrl: e.target.value })
+                  }
+                />
+              </div>
+
+              <div className="admin-form-group">
+                <label>Professional Summary / About Me</label>
+                <textarea
+                  className="admin-form-textarea"
+                  rows={4}
+                  value={resumeData.summary}
+                  onChange={(e) =>
+                    setResumeData({ ...resumeData, summary: e.target.value })
+                  }
+                ></textarea>
+              </div>
+
+              <div className="admin-form-group">
+                <label>Languages (Comma-separated)</label>
+                <input
+                  type="text"
+                  className="admin-form-input"
+                  value={resumeData.skills?.languages || ""}
+                  onChange={(e) =>
+                    setResumeData({
+                      ...resumeData,
+                      skills: { ...resumeData.skills, languages: e.target.value },
+                    })
+                  }
+                />
+              </div>
+
+              <div className="admin-form-group">
+                <label>Frontend Skills (Comma-separated)</label>
+                <input
+                  type="text"
+                  className="admin-form-input"
+                  value={resumeData.skills?.frontend || ""}
+                  onChange={(e) =>
+                    setResumeData({
+                      ...resumeData,
+                      skills: { ...resumeData.skills, frontend: e.target.value },
+                    })
+                  }
+                />
+              </div>
+
+              <div className="admin-form-group">
+                <label>Backend Skills (Comma-separated)</label>
+                <input
+                  type="text"
+                  className="admin-form-input"
+                  value={resumeData.skills?.backend || ""}
+                  onChange={(e) =>
+                    setResumeData({
+                      ...resumeData,
+                      skills: { ...resumeData.skills, backend: e.target.value },
+                    })
+                  }
+                />
+              </div>
+
+              <div className="admin-form-group">
+                <label>Databases (Comma-separated)</label>
+                <input
+                  type="text"
+                  className="admin-form-input"
+                  value={resumeData.skills?.databases || ""}
+                  onChange={(e) =>
+                    setResumeData({
+                      ...resumeData,
+                      skills: { ...resumeData.skills, databases: e.target.value },
+                    })
+                  }
+                />
+              </div>
+
+              {resumeSaveMsg && (
+                <p style={{ color: "#28a745", fontWeight: 600, marginBottom: 10 }}>
+                  {resumeSaveMsg}
+                </p>
+              )}
+
+              <button type="submit" className="admin-btn admin-btn-primary">
+                Save Resume Changes
+              </button>
+            </form>
           </div>
         )}
       </div>

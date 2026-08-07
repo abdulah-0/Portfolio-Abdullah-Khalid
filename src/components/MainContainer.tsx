@@ -11,6 +11,7 @@ import Work from "./Work";
 import setSplitText from "./utils/splitText";
 import ProjectDetailModal from "./ProjectDetailModal";
 import Admin from "./Admin";
+import ResumePage from "./ResumePage";
 import { fetchProjects, Project } from "../lib/supabase";
 
 const TechStack = lazy(() => import("./TechStack"));
@@ -22,6 +23,7 @@ const MainContainer = ({ children }: PropsWithChildren) => {
   const [projects, setProjects] = useState<Project[]>([]);
   const [selectedProject, setSelectedProject] = useState<Project | null>(null);
   const [isAdminOpen, setIsAdminOpen] = useState<boolean>(false);
+  const [isResumeOpen, setIsResumeOpen] = useState<boolean>(false);
 
   const loadProjectsData = async () => {
     const data = await fetchProjects();
@@ -31,12 +33,19 @@ const MainContainer = ({ children }: PropsWithChildren) => {
   useEffect(() => {
     loadProjectsData();
 
-    // Check if URL contains #admin or ?admin=true
+    // Check URL parameters / hashes
     if (
       window.location.hash === "#admin" ||
       window.location.search.includes("admin=true")
     ) {
       setIsAdminOpen(true);
+    }
+
+    if (
+      window.location.hash === "#resume" ||
+      window.location.search.includes("resume=true")
+    ) {
+      setIsResumeOpen(true);
     }
   }, []);
 
@@ -56,7 +65,7 @@ const MainContainer = ({ children }: PropsWithChildren) => {
     <div className="container-main">
       <Cursor />
       <Navbar />
-      <SocialIcons />
+      <SocialIcons onOpenResume={() => setIsResumeOpen(true)} />
       {isDesktopView && children}
       <div id="smooth-wrapper">
         <div id="smooth-content">
@@ -91,6 +100,11 @@ const MainContainer = ({ children }: PropsWithChildren) => {
           onClose={() => setIsAdminOpen(false)}
           onProjectsUpdated={loadProjectsData}
         />
+      )}
+
+      {/* Dedicated Resume Page Overlay */}
+      {isResumeOpen && (
+        <ResumePage onClose={() => setIsResumeOpen(false)} />
       )}
     </div>
   );
