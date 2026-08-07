@@ -26,6 +26,7 @@ interface ResumePageProps {
 const ResumePage: React.FC<ResumePageProps> = ({ onClose }) => {
   const [resume, setResume] = useState<ResumeData>(DEFAULT_RESUME);
   const [loading, setLoading] = useState<boolean>(true);
+  const [downloading, setDownloading] = useState<boolean>(false);
 
   useEffect(() => {
     async function loadData() {
@@ -36,11 +37,33 @@ const ResumePage: React.FC<ResumePageProps> = ({ onClose }) => {
     loadData();
   }, []);
 
-  const handleDownload = () => {
+  const handleDownload = async () => {
     if (resume.pdfUrl) {
-      window.open(resume.pdfUrl, "_blank");
+      setDownloading(true);
+      try {
+        const response = await fetch(resume.pdfUrl);
+        const blob = await response.blob();
+        const blobUrl = URL.createObjectURL(blob);
+        const link = document.createElement("a");
+        link.href = blobUrl;
+        link.download = "Abdullah_Khalid_Resume.pdf";
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        URL.revokeObjectURL(blobUrl);
+      } catch (e) {
+        console.warn("Direct blob download failed, falling back to download link", e);
+        const link = document.createElement("a");
+        link.href = resume.pdfUrl;
+        link.download = "Abdullah_Khalid_Resume.pdf";
+        link.target = "_blank";
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+      } finally {
+        setDownloading(false);
+      }
     } else {
-      // Print / Save as PDF natively if custom PDF is not uploaded yet
       window.print();
     }
   };
@@ -62,8 +85,12 @@ const ResumePage: React.FC<ResumePageProps> = ({ onClose }) => {
           </button>
         </div>
         <div className="resume-header-actions">
-          <button className="resume-btn resume-btn-primary" onClick={handleDownload}>
-            <MdDownload /> Download Resume PDF
+          <button
+            className="resume-btn resume-btn-primary"
+            onClick={handleDownload}
+            disabled={downloading}
+          >
+            <MdDownload /> {downloading ? "Downloading..." : "Download Resume PDF"}
           </button>
         </div>
       </div>
@@ -208,7 +235,7 @@ const ResumePage: React.FC<ResumePageProps> = ({ onClose }) => {
         {resume.experience &&
           resume.experience.map((exp, i) => (
             <div key={i} className="resume-card">
-              <div className="resume-card-header">
+              <div className="career-card-header">
                 <div>
                   <div className="resume-card-title">{exp.title}</div>
                   <div className="resume-card-company">{exp.company}</div>
