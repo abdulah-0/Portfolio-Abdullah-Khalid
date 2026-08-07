@@ -18,7 +18,7 @@ const Career = () => {
                 <h4>01 — Computer Engineering</h4>
                 <h5>COMSATS University Islamabad — Wah Campus</h5>
               </div>
-              <h3>2022 — Present</h3>
+              <h3>2023 — Present</h3>
             </div>
             <p>
               Pursuing Computer Engineering while developing a strong foundation in software development, programming, databases, digital systems, and computer engineering.
