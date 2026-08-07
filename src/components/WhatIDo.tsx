@@ -90,24 +90,9 @@ const WhatIDo = () => {
 
             <div className="what-content-in">
               <h3>DEVELOP</h3>
-              <h4>Description</h4>
               <p>
                 I build modern, scalable web applications and software solutions, from responsive frontends to robust backend systems. I work with React, Node.js, databases, APIs, and AI-powered technologies to turn ideas into functional products.
               </p>
-              <h5>Skillset & tools</h5>
-              <div className="what-content-flex">
-                <div className="what-tags">React / Vite</div>
-                <div className="what-tags">JavaScript / TypeScript</div>
-                <div className="what-tags">Node.js / Express</div>
-                <div className="what-tags">REST APIs</div>
-                <div className="what-tags">PostgreSQL / Supabase</div>
-                <div className="what-tags">Authentication</div>
-                <div className="what-tags">API Integrations</div>
-                <div className="what-tags">AI Applications</div>
-                <div className="what-tags">AI API Integration</div>
-                <div className="what-tags">Automation Workflows</div>
-                <div className="what-tags">Intelligent Software</div>
-              </div>
               <div className="what-arrow"></div>
             </div>
           </div>
@@ -131,20 +116,9 @@ const WhatIDo = () => {
             <div className="what-corner"></div>
             <div className="what-content-in">
               <h3>DESIGN</h3>
-              <h4>Description</h4>
               <p>
                 I design clean, intuitive interfaces with a focus on usability, visual consistency, and user experience. I combine modern design principles with practical development to create interfaces that look good and work well.
               </p>
-              <h5>Skillset & tools</h5>
-              <div className="what-content-flex">
-                <div className="what-tags">Modern Responsive Layouts</div>
-                <div className="what-tags">Dashboard & Admin Interfaces</div>
-                <div className="what-tags">E-commerce Interfaces</div>
-                <div className="what-tags">Mobile-Friendly Designs</div>
-                <div className="what-tags">Design Systems</div>
-                <div className="what-tags">Visual Consistency</div>
-                <div className="what-tags">User-Focused Interactions</div>
-              </div>
               <div className="what-arrow"></div>
             </div>
           </div>
